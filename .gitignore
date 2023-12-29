@@ -1,4 +1,7 @@
 env
 __pycache__
 .DS_Store
-settings
+pvz_user_editor_settings.dat
+main.spec
+dist
+build

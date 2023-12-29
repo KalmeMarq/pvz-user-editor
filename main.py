@@ -7,97 +7,10 @@ from PySide6 import QtCore, QtWidgets, QtGui
 from PySide6.QtCore import QItemSelection, Qt
 from PySide6.QtGui import QCloseEvent, QKeyEvent
 from PySide6.QtWidgets import QWidget
-import select_dialog
-import edit_window
-
-def deep_equals(value0, value1):
-  if value0 is None or value1 is None:
-    return False
-
-  if isinstance(value0, dict) and isinstance(value1, dict):
-    if len(value0) != len(value1):
-      return False
-
-    for key in value0:
-      if key not in value1:
-        return False
-      if not deep_equals(value0[key], value1[key]):
-        return False
-      
-    return True
-
-  if (isinstance(value0, list) and isinstance(value1, list)) or (isinstance(value0, tuple) and isinstance(value1, tuple)):
-    if len(value0) != len(value1):
-      return False
-    
-    for i,item in enumerate(value0):
-      if not deep_equals(item, value1[i]):
-        return False
-
-    return True
-
-  return value0 == value1
-
-class SelectUserDialog(QtWidgets.QDialog):
-  def __init__(self):
-    super().__init__()
-    self.ui = select_dialog.Ui_Dialog()
-    self.ui.setupUi(self)
-    self.setWindowTitle("Select a user")
-    self.ui.pushButton.clicked.connect(self.select_user)
-    self.ui.pushButton_2.clicked.connect(self.browse_folder)
-
-    self.list_model = QtCore.QStringListModel()
-    self.ui.listView.setModel(self.list_model)
-    self.ui.listView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-    settings_path = pathlib.Path("settings")
-    if settings_path.exists() and settings_path.is_file():
-      self.ui.lineEdit.setText(settings_path.read_text())
-      self.load()
-    else:
-      self.ui.pushButton.setEnabled(False)
-
-  def load(self):
-    userdata_path = pathlib.Path(self.ui.lineEdit.text())
-    users_path = userdata_path.joinpath("users.dat")
-
-    if users_path.exists() and users_path.is_file():
-      filebytes = users_path.read_bytes()
-      count = struct.unpack_from("<H", filebytes, 0x4)[0]
-      self.list_model.removeRows(0, self.list_model.rowCount())
-      if self.list_model.insertRows(0, count):
-        self.user_list = []
-        
-        cur = 0x6
-        for i in range(0, count):
-          name_len = struct.unpack_from("<H", filebytes, cur)[0]
-          cur += 2
-          name = filebytes[cur:(cur + name_len)].decode('utf-8')
-          cur += name_len
-          cur += 4
-          user_index = struct.unpack("<I", filebytes[cur:(cur + 4)])[0]
-          self.user_list.append({ 'name': name, 'user_index': user_index, 'filepath': userdata_path.joinpath(f"user{user_index}.dat") })
-          cur += 4
-          self.list_model.setData(self.list_model.index(i, 0), f"{name}")
-      if count > 0:
-        self.ui.listView.setCurrentIndex(self.list_model.index(0))
-        self.ui.pushButton.setEnabled(True)
-
-  @QtCore.Slot()
-  def select_user(self):
-    self.user = self.user_list[self.ui.listView.selectedIndexes()[0].row()]
-    self.accept()
-
-  @QtCore.Slot()
-  def browse_folder(self):
-    print("bruh")
-    file_dialog = QtWidgets.QFileDialog()
-    file_dialog.setFileMode(QtWidgets.QFileDialog.FileMode.Directory)
-    if file_dialog.exec():
-      self.ui.lineEdit.setText(file_dialog.selectedFiles()[0])
-      pathlib.Path("settings").write_text(file_dialog.selectedFiles()[0])
-      self.load()
+import ui.ui_select_dialog
+import ui.ui_edit_window
+from utils import *
+from select_user_dialog import SelectUserDialog
 
 class MainWindow(QtWidgets.QMainWindow):
   def __init__(self, user) -> None:
@@ -105,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow):
     self.user = user
     self.data = load_user(user['name'], user['user_index'], user['filepath'])
     self.original_data = copy.deepcopy(self.data)
-    self.ui = edit_window.Ui_MainWindow()
+    self.ui = ui.ui_edit_window.Ui_MainWindow()
     self.ui.setupUi(self)
     self.setWindowTitle("User File Editor")
     self.ui.tabWidget.setTabEnabled(4, False)
@@ -134,8 +47,9 @@ class MainWindow(QtWidgets.QMainWindow):
       self.ui.a_20
     ]
 
-    self.__load_data()
+    self.ui.zg_plant_list.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
     self.__setup_callbacks()
+    self.__load_data()
 
   def __setup_callbacks(self):
     self.ui.a_all.clicked.connect(lambda : self.__change_achievements_selection(0))
@@ -150,13 +64,73 @@ class MainWindow(QtWidgets.QMainWindow):
     self.ui.zg_bugspray_np.stateChanged.connect(lambda state : self.ui.zg_bugspray.setEnabled(state == 0))
     
     self.ui.zg_snail_lchoco_never.stateChanged.connect(lambda state : self.ui.zg_snail_lchoco.setEnabled(state == 0))
-    self.ui.zg_snail_purchased.stateChanged.connect(lambda state : self.ui.zg_snail_lawoken.setEnabled(state == 2))
+    self.ui.zg_snail_purchased.stateChanged.connect(lambda state : self.__update_snail_widgets(state == 2))
     self.ui.zg_food_purchased.stateChanged.connect(lambda state : self.ui.zg_tree_food.setEnabled(state == 2))
 
     self.ui.g_money.editingFinished.connect(lambda : self.ui.g_money.setValue(int(self.ui.g_money.value() / 10) * 10) if self.ui.g_money.value() % 10 != 0 else None)
 
     self.ui.save.clicked.connect(self.__save_btn)
     self.ui.reload.clicked.connect(self.__reload_btn)
+
+    self.ui.zg_plant_list.itemSelectionChanged.connect(self.__plant_list_selection_changed)
+    self.ui.zg_del_plant.clicked.connect(self.__plant_delete)
+    self.ui.zg_dup_plant.clicked.connect(self.__plant_duplicate)
+
+  def __plant_duplicate(self):
+    index = self.ui.zg_plant_list.selectedIndexes()[0].row()
+    plant = copy.deepcopy(self.data['data']['zen_garden']['plants'][index])
+    color = get_plant_color_name(plant['color']) 
+    dup_index = index + 1
+
+    self.data['data']['zen_garden']['plants'].insert(dup_index, plant)
+    self.ui.zg_plants_label.setText(f"Plants ({len(self.data['data']['zen_garden']['plants'])})")
+    self.ui.zg_plant_list.insertItem(dup_index,
+                                     f"{get_plant_type_name(plant['type'])}{"" if color == 'None' else f' ({color})'}, {PLANT_DIR[plant['dir']]} [{plant['pos'][0]}, {plant['pos'][1]}] {PLANT_LOCATION[plant['location']]}")
+
+    self.__update_plant_list()
+    self.ui.zg_plant_list.setCurrentItem(self.ui.zg_plant_list.item(dup_index))
+
+  def __update_plant_list(self):
+    self.ui.zg_plant_list.clear()
+    self.ui.zg_plants_label.setText(f"Plants ({len(self.data['data']['zen_garden']['plants'])})")
+    for i in range(len(self.data['data']['zen_garden']['plants'])):
+      plant = self.data['data']['zen_garden']['plants'][i]
+      color = get_plant_color_name(plant['color'])
+      self.ui.zg_plant_list.addItem(f"{get_plant_type_name(plant['type'])}{"" if color == 'None' else f' ({color})'}, {PLANT_DIR[plant['dir']]} [{plant['pos'][0]}, {plant['pos'][1]}] {PLANT_LOCATION[plant['location']]}")
+
+  def __plant_delete(self):
+    indices = []
+    for m in self.ui.zg_plant_list.selectedIndexes():
+      indices.append(m.row())
+
+    indices.sort(reverse=True)
+
+    for index in indices:
+      self.data['data']['zen_garden']['plants'].pop(index)
+
+    self.__update_plant_list()
+
+  def __plant_list_selection_changed(self):
+    sel_items = self.ui.zg_plant_list.selectedItems()
+
+    self.ui.zg_del_plant.setEnabled(len(sel_items) >= 1)
+    self.ui.zg_dup_plant.setEnabled(len(sel_items) == 1)
+
+    self.ui.groupBox_11.setEnabled(len(sel_items) == 1)
+
+    if len(sel_items) == 1:
+      plant = self.data['data']['zen_garden']['plants'][self.ui.zg_plant_list.selectedIndexes()[0].row()]
+      self.ui.zg_plant_type.setCurrentIndex(plant['type'])
+      self.ui.zg_plant_loc.setCurrentIndex(plant['location'])
+      self.ui.zg_plant_hn.setCurrentIndex(plant['happiness_need'])
+      self.ui.zg_plant_color.setCurrentIndex(1 if plant['color'] == 0 else plant['color'] - 1)
+      self.ui.zg_plant_row.setValue(plant['pos'][0])
+      self.ui.zg_plant_col.setValue(plant['pos'][1])
+
+  def __update_snail_widgets(self, is_purchased):
+    self.ui.zg_snail_lawoken.setEnabled(is_purchased)
+    self.ui.zg_snail_x.setEnabled(is_purchased)
+    self.ui.zg_snail_y.setEnabled(is_purchased)
 
   def __change_achievements_selection(self, action: int):
     for checkbox in self.uiAchievements:
@@ -229,24 +203,57 @@ class MainWindow(QtWidgets.QMainWindow):
     self.ui.zg_aquarium_g.setChecked(self.data['data']['zen_garden']['aquarium_garden'])
     self.ui.zg_mushroom_g.setChecked(self.data['data']['zen_garden']['mushroom_garden'])
     self.ui.zg_wheelbarrow.setChecked(self.data['data']['zen_garden']['wheel_barrow'])
-    
+
+    self.ui.zg_mg1_date.setDate(QtCore.QDate(2000, 1, 1).addDays(self.data['data']['zen_garden']['marigold1_date']));
+    self.ui.zg_mg2_date.setDate(QtCore.QDate(2000, 1, 1).addDays(self.data['data']['zen_garden']['marigold2_date']));
+    self.ui.zg_mg3_date.setDate(QtCore.QDate(2000, 1, 1).addDays(self.data['data']['zen_garden']['marigold3_date']));
+
+    if self.data['data']['zen_garden']['marigold1_date'] == 0:
+      self.ui.zg_mg1_date.setEnabled(False)
+      self.ui.zg_mg1_never.setChecked(True)
+    else:
+      self.ui.zg_mg1_date.setEnabled(True)
+      self.ui.zg_mg1_never.setChecked(False)
+
+    if self.data['data']['zen_garden']['marigold2_date'] == 0:
+      self.ui.zg_mg2_date.setEnabled(False)
+      self.ui.zg_mg2_never.setChecked(True)
+    else:
+      self.ui.zg_mg2_date.setEnabled(True)
+      self.ui.zg_mg2_never.setChecked(False)
+
+    if self.data['data']['zen_garden']['marigold3_date'] == 0:
+      self.ui.zg_mg3_date.setEnabled(False)
+      self.ui.zg_mg3_never.setChecked(True)
+    else:
+      self.ui.zg_mg3_date.setEnabled(True)
+      self.ui.zg_mg3_never.setChecked(False)
+
     if self.data['data']['zen_garden']['fertilizer'] == 0:
       self.ui.zg_fertilizer.setValue(0)
       self.ui.zg_fertilizer_np.setChecked(True)
-      self.ui.zg_fertilizer.setEnabled(False)
     else:
       self.ui.zg_fertilizer.setValue(self.data['data']['zen_garden']['fertilizer'] - 1000)
-      self.ui.zg_fertilizer_np.setChecked(True)
-      self.ui.zg_fertilizer.setEnabled(True)
+      self.ui.zg_fertilizer_np.setChecked(False)
 
     if self.data['data']['zen_garden']['bug_spray'] == 0:
       self.ui.zg_bugspray.setValue(0)
       self.ui.zg_bugspray_np.setChecked(True)
-      self.ui.zg_bugspray.setEnabled(False)
     else:
       self.ui.zg_bugspray.setValue(self.data['data']['zen_garden']['bug_spray'] - 1000)
-      self.ui.zg_bugspray_np.setChecked(True)
-      self.ui.zg_bugspray.setEnabled(True)
+      self.ui.zg_bugspray_np.setChecked(False)
+
+    self.ui.zg_snail_purchased.setChecked(self.data['data']['zen_garden']['snail']['last_awoken'] != 0)
+
+    self.ui.zg_snail_x.setValue(self.data['data']['zen_garden']['snail']['x'])
+    self.ui.zg_snail_y.setValue(self.data['data']['zen_garden']['snail']['y'])
+
+    self.ui.zg_plant_list.clear()
+    self.ui.zg_plants_label.setText(f"Plants ({len(self.data['data']['zen_garden']['plants'])})")
+    for i in range(len(self.data['data']['zen_garden']['plants'])):
+      plant = self.data['data']['zen_garden']['plants'][i]
+      color = get_plant_color_name(plant['color'])
+      self.ui.zg_plant_list.addItem(f"{get_plant_type_name(plant['type'])}{"" if color == 'None' else f' ({color})'}, {PLANT_DIR[plant['dir']]} [{plant['pos'][0]}, {plant['pos'][1]}] {PLANT_LOCATION[plant['location']]}")
 
     self.ui.a_1.setChecked(self.data['data']['achievements']['home_lawn_security'])
     self.ui.a_2.setChecked(self.data['data']['achievements']['nobel_peas_prize'])
@@ -348,186 +355,9 @@ class MainWindow(QtWidgets.QMainWindow):
     self.ui.z_license.setChecked(self.data['data']['zombatar']['license'])
     self.ui.z_created_before.setChecked(self.data['data']['zombatar']['created_before'])
 
-def load_user(name, user_index, filepath):
-  file_bytes = filepath.read_bytes()
-
-  achiev_offset = 0x334 + (struct.unpack("<I", file_bytes[0x330:0x334])[0] * 0x58) 
-
-  user = {
-    'index': user_index,
-    'data': {
-      'general': {
-        'name': name,
-        'level': struct.unpack("<I", file_bytes[0x004:0x008])[0],
-        'completed': struct.unpack("<I", file_bytes[0x00C:0x010])[0],
-        'money': struct.unpack("<I", file_bytes[0x008:0x00C])[0] * 10,
-        'minigames_unlocked': struct.unpack("<I", file_bytes[0x300:0x304])[0] == 1,
-        'puzzles_unlocked': struct.unpack("<I", file_bytes[0x304:0x308])[0] == 1,
-        'has_taco': struct.unpack("<I", file_bytes[0x320:0x324])[0] == 1,
-        'shop': {
-          'slots': struct.unpack("<I", file_bytes[0x1F4:0x1F8])[0] + 6,
-          'pool_cleaner': struct.unpack("<I", file_bytes[0x1F8:0x1FC])[0] == 1,
-          'roof_cleaner': struct.unpack("<I", file_bytes[0x1FC:0x200])[0] == 1,
-          'rake_uses': struct.unpack("<I", file_bytes[0x200:0x204])[0],
-          'plants': {
-            'gatling_pea': struct.unpack("<I", file_bytes[0x1A0:0x1A4])[0] == 1,
-            'twin_sunflower': struct.unpack("<I", file_bytes[0x1A4:0x1A8])[0] == 1,
-            'gloom_shroom': struct.unpack("<I", file_bytes[0x1A8:0x1AC])[0] == 1,
-            'cattail': struct.unpack("<I", file_bytes[0x1AC:0x1B0])[0] == 1,
-            'winter_melon': struct.unpack("<I", file_bytes[0x1B0:0x1B4])[0] == 1,
-            'gold_magnet': struct.unpack("<I", file_bytes[0x1B4:0x1B8])[0] == 1,
-            'spikerock': struct.unpack("<I", file_bytes[0x1B8:0x1BC])[0] == 1,
-            'cob_cannon': struct.unpack("<I", file_bytes[0x1BC:0x1C0])[0] == 1,
-            'imitater': struct.unpack("<I", file_bytes[0x1C0:0x1C4])[0] == 1,
-          }
-        }
-      },
-      'zen_garden': {
-        'golden_can': False,
-        'phonograph': False,
-        'glove': False,
-        'fertilizer': 0,
-        'bug_spray': 0,
-        'mushroom_garden': 0,
-        'aquarium_garden': 0,
-        'wheel_barrow': 0,
-        'snail': {
-          'last_awoken': 0,
-          'last_chocalte': 0,
-          'x': 0,
-          'y': 0,
-        },
-        'tree': {
-          'purchased': False,
-          'height': 0,
-          'purchased_food': False,
-          'food': 0,
-        },
-        'plants': []
-      },
-      'achievements': {
-        'home_lawn_security': struct.unpack('<H', file_bytes[achiev_offset:(achiev_offset + 2)])[0] != 0,
-        'nobel_peas_prize': struct.unpack('<H', file_bytes[(achiev_offset + 2):(achiev_offset + 4)])[0] != 0,
-        'better_off_dead': struct.unpack('<H', file_bytes[(achiev_offset + 4):(achiev_offset + 6)])[0] != 0,
-        'china_shop': struct.unpack('<H', file_bytes[(achiev_offset + 6):(achiev_offset + 8)])[0] != 0,
-        'spudow!': struct.unpack('<H', file_bytes[(achiev_offset + 8):(achiev_offset + 10)])[0] != 0,
-        'explodonator': struct.unpack('<H', file_bytes[(achiev_offset + 10):(achiev_offset + 12)])[0] != 0,
-        'morticulturalist': struct.unpack('<H', file_bytes[(achiev_offset + 12):(achiev_offset + 14)])[0] != 0,
-        'dont_pea_in_the_pool': struct.unpack('<H', file_bytes[(achiev_offset + 14):(achiev_offset + 16)])[0] != 0,
-        'roll_some_heads': struct.unpack('<H', file_bytes[(achiev_offset + 16):(achiev_offset + 18)])[0] != 0,
-        'grounded': struct.unpack('<H', file_bytes[(achiev_offset + 18):(achiev_offset + 20)])[0] != 0,
-        'zombologist': struct.unpack('<H', file_bytes[(achiev_offset + 20):(achiev_offset + 22)])[0] != 0,
-        'penny_pitcher': struct.unpack('<H', file_bytes[(achiev_offset + 22):(achiev_offset + 24)])[0] != 0,
-        'sunny_days': struct.unpack('<H', file_bytes[(achiev_offset + 24):(achiev_offset + 26)])[0] != 0,
-        'popcorn_party': struct.unpack('<H', file_bytes[(achiev_offset + 26):(achiev_offset + 28)])[0] != 0,
-        'good_morning': struct.unpack('<H', file_bytes[(achiev_offset + 28):(achiev_offset + 30)])[0] != 0,
-        'no_fungus_among_us': struct.unpack('<H', file_bytes[(achiev_offset + 30):(achiev_offset + 32)])[0] != 0,
-        'beyond_the_grave': struct.unpack('<H', file_bytes[(achiev_offset + 32):(achiev_offset + 34)])[0] != 0,
-        'immortal': struct.unpack('<H', file_bytes[(achiev_offset + 34):(achiev_offset + 36)])[0] != 0,
-        'towering_wisdom': struct.unpack('<H', file_bytes[(achiev_offset + 36):(achiev_offset + 38)])[0] != 0,
-        'mustache_mode': struct.unpack('<H', file_bytes[(achiev_offset + 38):(achiev_offset + 40)])[0] != 0,
-      },
-      'challenges': {
-        'survivals': {
-          'normal': {
-            'day': 0,
-            'night': 0,
-            'pool': 0,
-            'fog': 0,
-            'roof': 0,
-          },
-          'hard': {
-            'day': 0,
-            'night': 0,
-            'pool': 0,
-            'fog': 0,
-            'roof': 0,
-          },
-          'endless': 0
-        },
-        'minigames': {
-          'zombotany': False,
-          'wallnut_bowling': False,
-          'slot_machine': False,
-          'its_raining_seeds': False,
-          'beghouled': False,
-          'invisighoul': False,
-          'seeing_stars': False,
-          'zombiquarium': False,
-          'beghouled_twist': False,
-          'big_trouble_little_zombie': False,
-          'portal_combat': False,
-          'column_like_you_see_em': False,
-          'bobsled_bonanza': False,
-          'zombie_n_zombie_q': False,
-          'whack_a_zombie': False,
-          'last_stand': False,
-          'zombotany2': False,
-          'wallnut_bowling2': False,
-          'pogo_party': False,
-          'dr_zomboss_revenge': False,
-        },
-        'puzzles': {
-          'vasebreaker': False,
-          'to_the_left': False,
-          'third_vase': False,
-          'chain_reaction': False,
-          'm_is_for_metal': False,
-          'scary_potter': False,
-          'hokey_pokey': False,
-          'another_chain_reaction': False,
-          'ace_of_vases': False,
-          'vasebreaker_endless': 0,
-          'izombie': False,
-          'izombie_too': False,
-          'can_you_dig_it': False,
-          'totally_nuts': False,
-          'dead_zeppelin': False,
-          'me_smash': False,
-          'zomboggie': False,
-          'tree_hit_wonder': False,
-          'all_your_brainz': False,
-          'izombie_endless': 0,
-        }
-      },
-      'limbo': {
-        'survival_endless': {
-          'day': 0,
-          'night': 0,
-          'fog': 10,
-          'roof': 0,
-        },
-        'minigames': {
-          'art_wallnut': False,
-          'sunny_day': False,
-          'unsodded': False,
-          'buy_time': True,
-          'art_sunflower': False,
-          'air_raid': False,
-          'ice_level': False,
-          'zen_garden': False,
-          'high_gravity': False,
-          'grave_danger': False,
-          'can_you_dig_it': False,
-          'dark_night': False,
-          'bungee_blitz': False,
-          'intro': False,
-          'tree': False,
-          'upsell': False,
-        }
-      },
-      'zombatar': {
-        'license': False,
-        'created_before': False,
-        'zombatars': [],
-      }
-    }
-  }
-
-  return user
-
 def main():
-  app = QtWidgets.QApplication([])
+  app = QtWidgets.QApplication(sys.argv)
+  app.setWindowIcon(QtGui.QIcon("icon.ico"))
 
   dialog = SelectUserDialog()
   if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:

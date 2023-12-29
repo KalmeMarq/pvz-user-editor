@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>863</width>
-    <height>550</height>
+    <height>558</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -727,14 +727,14 @@
         <item row="0" column="1">
          <layout class="QVBoxLayout" name="verticalLayout_9">
           <item>
-           <widget class="QLabel" name="label_48">
+           <widget class="QLabel" name="zg_plants_label">
             <property name="text">
              <string>Plants:</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QListWidget" name="listWidget"/>
+           <widget class="QListWidget" name="zg_plant_list"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_45">
@@ -788,7 +788,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBox_2">
+                  <widget class="QComboBox" name="zg_plant_type">
                    <item>
                     <property name="text">
                      <string>Peashooter</string>
@@ -811,12 +811,247 @@
                    </item>
                    <item>
                     <property name="text">
-                     <string>Potate Mine</string>
+                     <string>Potato Mine</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Snow Pea</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Chomper</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Repeater</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Puff-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sun-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Fume-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Grave Buster</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Hypno-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Scaredy-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Ice-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Doom-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Lily Pad</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Squash</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Threepeater</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tangle Kelp</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Jalapeno</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Spikeweed</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Torchwood</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tall-nut</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sea-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Plantern</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cactus</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Blover</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Split Pea</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Starfruit</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Pumpkin</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Magnet-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cabbage-pult</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Flower Pot</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Kernel-pult</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Coffee Bean</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Garlic</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Umbrella Leaf</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Marigold</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Melon-pult</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gatling Pea</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
                      <string>Twin Sunflower</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gloom-shroom</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cattail</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Winter Melon</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gold Magnet</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Spikerock</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cob Cannon</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Imitater</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Explode-o-nut</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Giant Wall-nut</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sprout</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Left-facing Repeater</string>
                     </property>
                    </item>
                   </widget>
@@ -833,7 +1068,71 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBox_3"/>
+                  <widget class="QComboBox" name="zg_plant_color">
+                   <property name="currentIndex">
+                    <number>1</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Low saturation</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Default color</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Magenta</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Orange</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Pink</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cyan</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Red</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Blue</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Purple</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light purple</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Yellow</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Light green</string>
+                    </property>
+                   </item>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -853,7 +1152,11 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QSpinBox" name="spinBox_25"/>
+                  <widget class="QSpinBox" name="zg_plant_row">
+                   <property name="maximum">
+                    <number>9</number>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QLabel" name="label_40">
@@ -869,20 +1172,42 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QSpinBox" name="spinBox_26"/>
+                  <widget class="QSpinBox" name="zg_plant_col">
+                   <property name="maximum">
+                    <number>9</number>
+                   </property>
+                  </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacer_6">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                  <widget class="QLabel" name="label_48">
+                   <property name="text">
+                    <string>Location:</string>
                    </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="zg_plant_loc">
+                   <item>
+                    <property name="text">
+                     <string>Zen Garden</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Mushroom Garden</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Aquarium Garden</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Wheelbarrow</string>
+                    </property>
+                   </item>
+                  </widget>
                  </item>
                 </layout>
                </item>
@@ -902,7 +1227,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QSpinBox" name="spinBox_27"/>
+                  <widget class="QSpinBox" name="zg_plant_watered"/>
                  </item>
                  <item>
                   <widget class="QLabel" name="label_42">
@@ -1044,7 +1369,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBox_4">
+                  <widget class="QComboBox" name="zg_plant_hn">
                    <item>
                     <property name="text">
                      <string>Nothing</string>
@@ -1087,6 +1412,18 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="wrapping">
                <bool>false</bool>
               </property>
@@ -1100,7 +1437,7 @@
                <bool>false</bool>
               </property>
               <property name="displayFormat">
-               <string>dddd, MMMM dd, yyyy</string>
+               <string>dddd, MMMM d, yyyy</string>
               </property>
               <property name="calendarPopup">
                <bool>true</bool>
@@ -1140,6 +1477,18 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="wrapping">
                <bool>false</bool>
               </property>
@@ -1153,7 +1502,7 @@
                <bool>false</bool>
               </property>
               <property name="displayFormat">
-               <string>dddd, MMMM dd, yyyy</string>
+               <string>dddd, MMMM d, yyyy</string>
               </property>
               <property name="calendarPopup">
                <bool>true</bool>
@@ -1193,6 +1542,18 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="wrapping">
                <bool>false</bool>
               </property>
@@ -1206,7 +1567,7 @@
                <bool>false</bool>
               </property>
               <property name="displayFormat">
-               <string>dddd, MMMM dd, yyyy</string>
+               <string>dddd, MMMM d, yyyy</string>
               </property>
               <property name="calendarPopup">
                <bool>true</bool>
@@ -1414,6 +1775,38 @@
                   <bool>true</bool>
                  </property>
                 </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_66">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_67">
+                 <item>
+                  <widget class="QLabel" name="label_67">
+                   <property name="text">
+                    <string>Position X:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="zg_snail_x"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_68">
+                 <item>
+                  <widget class="QLabel" name="label_68">
+                   <property name="text">
+                    <string>Position Y:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="zg_snail_y"/>
+                 </item>
+                </layout>
                </item>
               </layout>
              </item>
